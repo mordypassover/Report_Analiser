@@ -20,7 +20,7 @@ namespace Analiser
         }
     class ReportAnaliser
         {
-        static void ReadTxtFile(string path, string[] fileData)
+        static int LoadFile(string path, string[] fileData, string[] unitName, string[] reportType, int[] priority, double[] score, string[] status)
         {
              
             if (!File.Exists(path))
@@ -39,8 +39,8 @@ namespace Analiser
 
                 fileData[i] = fileDataRead[i];
             }
+            return ProcessReports(fileData, unitName, reportType, priority, score, status);
 
-            
         }
         static int ProcessReports(string[] stringDataArr, string[] unitName, string[] reportType, int[] priority, double[] score, string[] status)
         {   
@@ -100,7 +100,7 @@ namespace Analiser
             }
         }
 
-        static double CalculateAverage(int[] score,int numOfLines) 
+        static double CalculateAverage(double[] score,int numOfLines) 
         {
             int count = 0;
             if (numOfLines == 0) return 0;
@@ -108,17 +108,61 @@ namespace Analiser
             return (double)count / numOfLines;
         }
 
-        static void FindMaxScore() { }
+        static double FindMaxScore(double[] score) 
+        {
+            double max = 0;
+            foreach (double num in score) 
+            {
+                if (max < num) max = num;
+            }
+            return max;
+        }
 
-        static void FindMinScore() { }
+        static double FindMinScore(double[] score,int count)
+        {
+            double min = 100.0;
+            foreach (double num in score)
+            {
+                if (min < num) min = num;
+            }
+            return min;
+        }
+        
 
-        static void CountByStatus() { }
+        static int CountByStatus(string[] status, Status statusEnom, int count)
+        {
+            int cnt = 0;
+            for (int i =0; i >count; i++) 
+            {
+                if (status[i] == statusEnom.ToString() ) cnt += 1;
+            }
+            return cnt;
+        }
 
-        static void CountByType() { }
+        static int CountByType(string[] reportType, ReportType type, int count)
+        {
+            int cnt = 0;
+            for (int i = 0; i > count; i++)
+            {
+                if (reportType[i] == type.ToString()) cnt += 1;
+            }
+            return cnt;
+        }
+        static void DisplayBasicStatistics(double[] score, int count) 
+        {
+            Console.WriteLine($"=== Basic Statistics ===\n" +
+                $"number of reports : {count}\n" +
+                $"average : {CalculateAverage(score, count)}\n" +
+                $"max score : {FindMaxScore(score)}\n" +
+                $"min score : {FindMinScore(score, count)}");
 
-        static void DisplayBasicStatistics() { }
+        }
 
-        static void DisplayStatusCounts() { }
+        static void DisplayStatusCounts(string[] reportType, int count)
+        {
+            Console.WriteLine($"=== Status Counts ===\n" +
+                $"Pending : ");
+        }
 
         static void DisplayTypeCounts() { }
         static void DisplayHighestPriorityApproved() { }
@@ -136,8 +180,8 @@ namespace Analiser
             double[] score = new double[fileData.Length];
             string[] status = new string[fileData.Length];
 
-            ReadTxtFile(filePath, fileData);
-            count = ProcessReports(fileData, unitName, reportType, priority, score, status);
+            count =LoadFile(filePath, fileData, unitName, reportType, priority, score, status);
+            
 
 
 
