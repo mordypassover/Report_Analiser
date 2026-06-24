@@ -23,17 +23,28 @@ namespace Analiser
         static string[]? ReadTxtFile(string path )
         {
              
-            if (!File.Exists(path)) { return null; }
+            if (!File.Exists(path))
+            {
+                Console.WriteLine($"Error file {Path.GetFileName(path)} not found");
+                return null;
+            }
 
             string[] fileData = File.ReadAllLines(path, Encoding.UTF8);
+            if (fileData.Length==0) 
+            {
+                Console.WriteLine($"Error file {Path.GetFileName(path)} is empty");
+                return null;
+            }
             return fileData;
         }
         static void ProcessReports(string[] stringDataArr, string[] unitName, string[] reportType, double[] score, string[] status)
         {
-        
         }
 
-        static void CalculateAverage() { }
+        static void CalculateAverage() 
+        {
+
+        }
 
         static void FindMaxScore() { }
 
@@ -53,16 +64,18 @@ namespace Analiser
 
         static void Main()
             {
-            string filePath = "txt.reports";
+            string filePath = "reports.txt";
             string[]? fileData = ReadTxtFile(filePath);
-            if (fileData != null)
-            {
-                string[] unitName = new string[fileData.Length];
-                string[] reportType = new string[fileData.Length];
-                int[] priority = new int[fileData.Length];
-                double[] score = new double[fileData.Length];
-                string[] status = new string[fileData.Length];
-            }
+            if (fileData != null | fileData.Length ==0)
+                {
+                    string[] unitName = new string[fileData.Length];
+                    string[] reportType = new string[fileData.Length];
+                    int[] priority = new int[fileData.Length];
+                    double[] score = new double[fileData.Length];
+                    string[] status = new string[fileData.Length];
+             
+                }
+            
             }   
         }
     }
