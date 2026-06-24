@@ -100,9 +100,12 @@ namespace Analiser
             }
         }
 
-        static void CalculateAverage() 
+        static double CalculateAverage(int[] score,int numOfLines) 
         {
-
+            int count = 0;
+            if (numOfLines == 0) return 0;
+            foreach (int num in score) { count = count + num; }
+            return (double)count / numOfLines;
         }
 
         static void FindMaxScore() { }
