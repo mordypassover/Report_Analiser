@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -134,7 +135,7 @@ namespace Analiser
             int cnt = 0;
             for (int i =0; i >count; i++) 
             {
-                if (status[i] == statusEnom.ToString() ) cnt += 1;
+                if (status[i].ToLower() == statusEnom.ToString().ToLower()) cnt += 1;
             }
             return cnt;
         }
@@ -144,7 +145,7 @@ namespace Analiser
             int cnt = 0;
             for (int i = 0; i > count; i++)
             {
-                if (reportType[i] == type.ToString()) cnt += 1;
+                if (reportType[i].ToLower() == type.ToString().ToLower()) cnt += 1;
             }
             return cnt;
         }
@@ -158,15 +159,58 @@ namespace Analiser
 
         }
 
-        static void DisplayStatusCounts(string[] reportType, int count)
+        static void DisplayStatusCounts(string[] status, int count)
         {
             Console.WriteLine($"=== Status Counts ===\n" +
-                $"Pending : ");
+                $"Pending : {CountByStatus(status, Status.Pending,count)}\n" +
+                $"Approved : {CountByStatus(status, Status.Approved, count)}\n" +
+                $"Rejected : {CountByStatus(status, Status.Rejected, count)}");
         }
 
-        static void DisplayTypeCounts() { }
-        static void DisplayHighestPriorityApproved() { }
-        static void DisplayAverageByPriority() { }
+        static void DisplayTypeCounts(string[] reportType, int count) 
+        {
+            Console.WriteLine($"=== Type Counts ===\n" +
+                $"Collect : {CountByType(reportType,ReportType.Collect, count)}\n" +
+                $"Analyze : {CountByType(reportType, ReportType.Analyze, count)}\n" +
+                $"Recon : {CountByType(reportType, ReportType.Recon, count)}\n" +
+                $"Intel : {CountByType(reportType, ReportType.Intel, count)}");
+        }
+        static void DisplayHighestPriorityApproved(string[] unitName, string[] reportType,int[] priority,double[] score,string[] status, int count) 
+        {
+            int highestApprovedPriorityIndex = 0;
+        for (int i = 1; i < count; i++)
+            {
+                if (status[i].ToLower() == Status.Approved.ToString().ToLower()) 
+                {
+                    if (priority[highestApprovedPriorityIndex] < priority[i]) 
+                    {
+                        highestApprovedPriorityIndex = i; 
+                    }
+                }
+            }
+            Console.WriteLine($"=== Highest Priority Approved ===" +
+                $"unit Name: {unitName[highestApprovedPriorityIndex]}," +
+                $"report Type : {reportType[highestApprovedPriorityIndex]}," +
+                $"report Type : {reportType[highestApprovedPriorityIndex]}," +
+                $"priority : {priority[highestApprovedPriorityIndex]}," +
+                $"score : {score[highestApprovedPriorityIndex]}," +
+                $"status : {status[highestApprovedPriorityIndex]},");
+        }
+        static void DisplayAverageByPriority(int[] priority, double[] score, int count)
+        {
+            double[] prioritysSums = new double[5];
+            int[] prioritysCnts = new int[5];
+            for (int i = 0; i < count; i++)
+            {
+                prioritysSums[priority[i]] = prioritysSums[priority[i]] + score[i];
+                prioritysCnts[priority[i]]++;
+            }
+            foreach (int p in prioritysCnts)
+            {
+                if (prioritysCnts[p] == 0) { Console.WriteLine($"priorety {p + 1} : no reports"); }
+                else { Console.WriteLine($"priorety {p + 1} : {(double)prioritysSums[p] / prioritysCnts[p]}"); }
+            }
+        }
 
         static void Main()
             {
@@ -181,12 +225,6 @@ namespace Analiser
             string[] status = new string[fileData.Length];
 
             count =LoadFile(filePath, fileData, unitName, reportType, priority, score, status);
-            
-
-
-
-
-
 
             }   
         }
