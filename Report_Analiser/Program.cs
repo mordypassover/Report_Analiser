@@ -36,13 +36,19 @@ namespace Analiser
                 Console.WriteLine($"Error file {Path.GetFileName(path)} is empty");
                 return 0;
             }
+            Console.WriteLine($"File loaded: {fileDataRead.Length} lines found.");
             for(int i =0; i < fileDataRead.Length; i++)
             {
                 if (i >= 100) break;//if file bigger then 100 lines
 
                 fileData[i] = fileDataRead[i];
             }
-            return ProcessReports(fileData, unitName, reportType, priority, score, status);
+            
+            int count = ProcessReports(fileData, unitName, reportType, priority, score, status);
+            Console.WriteLine($"Processing complete.\n" +
+                              $"Valid records: {count}\n" +
+                              $"Invalid records: {fileDataRead.Length - count}");
+            return count;
 
         }
         static int ProcessReports(string[] stringDataArr, string[] unitName, string[] reportType, int[] priority, double[] score, string[] status)
@@ -81,10 +87,10 @@ namespace Analiser
                 score[linecount] = double.Parse(line[3]);
                 status[linecount] = line[4];
                 linecount++;
-
+                Console.WriteLine("Valid record processed.");
             }
+            Console.WriteLine($"Stored {linecount} valid records for analysis.");
             return linecount;
-
         }
 
         static void FilterNotValid(Array[] splitDataArr) 
@@ -96,14 +102,30 @@ namespace Analiser
                 {
                     continue;
                 }
-                bool flag = false;
-                flag = Enum.TryParse(line[1], true, out ReportType report) ;
+                bool flag = true;
+                if (!Enum.TryParse(line[1], true, out ReportType report)) 
+                {
+                    flag = false;
+                    Console.WriteLine("Report Type not valid");
+                }
 
-                flag = int.TryParse(line[2], out int num) && (num < 6 && num > 0) && flag;
+                if (!int.TryParse(line[2], out int num) || !(num < 6 && num > 0) )
+                {
+                    flag = false;
+                    Console.WriteLine("priority not valid");
+                }
 
-                flag = double.TryParse(line[3], out double score) && (score <= 100 && score >= 0) && flag;
+                if (!double.TryParse(line[3], out double score) || !(score <= 100 && score >= 0))
+                {
+                    flag = false;
+                    Console.WriteLine("score not valid");
+                }
 
-                flag = Enum.TryParse(line[4], true, out Status stat) && flag;
+                if (!Enum.TryParse(line[4], true, out Status stat))
+                {
+                    flag = false;
+                    Console.WriteLine("Status not valid");
+                }
 
                 if (!flag) { line[0] = ""; line[1] = ""; line[2] = ""; line[3] = ""; line[4] = ""; } 
             }
@@ -159,7 +181,7 @@ namespace Analiser
         }
         static void DisplayBasicStatistics(double[] score, int count) 
         {
-            Console.WriteLine($"=== Basic Statistics ===\n" +
+            Console.WriteLine($"=== Report Statistics ===\n" +
                 $"number of reports : {count}\n" +
                 $"average : {CalculateAverage(score, count):F2}\n" +
                 $"max score : {FindMaxScore(score)}\n" +
@@ -169,7 +191,7 @@ namespace Analiser
 
         static void DisplayStatusCounts(string[] status, int count)
         {
-            Console.WriteLine($"=== Status Counts ===\n" +
+            Console.WriteLine($"=== Reports by Status ===\n" +
                 $"Pending : {CountByStatus(status, Status.Pending,count)}\n" +
                 $"Approved : {CountByStatus(status, Status.Approved, count)}\n" +
                 $"Rejected : {CountByStatus(status, Status.Rejected, count)}");
@@ -177,7 +199,7 @@ namespace Analiser
 
         static void DisplayTypeCounts(string[] reportType, int count) 
         {
-            Console.WriteLine($"=== Type Counts ===\n" +
+            Console.WriteLine($"=== Reports by Type ===\n" +
                 $"Collect : {CountByType(reportType,ReportType.Collect, count)}\n" +
                 $"Analyze : {CountByType(reportType, ReportType.Analyze, count)}\n" +
                 $"Recon : {CountByType(reportType, ReportType.Recon, count)}\n" +
@@ -209,7 +231,7 @@ namespace Analiser
             int[] prioritysCnts = new int[5];
             for (int i = 0; i < count; i++)
             {
-                prioritysSums[priority[i] - 1] = prioritysSums[priority[i] - 1] + score[i];
+                prioritysSums[priority[i] - 1] += score[i];
                 prioritysCnts[priority[i] - 1]++;
             }
             for (int i = 0; i < prioritysCnts.Length; i++)
