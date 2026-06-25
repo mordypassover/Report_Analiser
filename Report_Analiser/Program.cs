@@ -5,7 +5,7 @@ using System.Text;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Analiser
-    {
+{
     public enum ReportType
         {
             Intel,
@@ -20,21 +20,23 @@ namespace Analiser
         Pending
         }
     class ReportAnaliser
-        {
+    {
         static int LoadFile(string path, string[] fileData, string[] unitName, string[] reportType, int[] priority, double[] score, string[] status)
         {
              
             if (!File.Exists(path))
             {
                 Console.WriteLine($"Error file {Path.GetFileName(path)} not found");
+                return 0;
             }
 
             string[] fileDataRead = File.ReadAllLines(path, Encoding.UTF8);
             if (fileDataRead.Length==0) 
             {
                 Console.WriteLine($"Error file {Path.GetFileName(path)} is empty");
+                return 0;
             }
-            for(int i =0; i > fileDataRead.Length; i++)
+            for(int i =0; i < fileDataRead.Length; i++)
             {
                 if (i >= 100) break;//if file bigger then 100 lines
 
@@ -46,29 +48,33 @@ namespace Analiser
         static int ProcessReports(string[] stringDataArr, string[] unitName, string[] reportType, int[] priority, double[] score, string[] status)
         {   
             Array[] splitDataArr = new Array[100];
-            string[] splitlineStr = new string[5];
             int linecount = 0;
 
             for (int i = 0 ; i < stringDataArr.Length; i++)//splits every line at ','
             {
-                if (stringDataArr[i] == "") // checks that line is full
+                string[] splitLineStr = new string[5];
+                if ( stringDataArr[i] == null) // checks that line is full
                 {
+                    stringDataArr[i] = " , ";
                     continue; 
                 }
-                splitlineStr = stringDataArr[i].Split(",");
+                
+                splitLineStr = stringDataArr[i].Split(",");
                 for (int j = 0; j < 5; j++)//strips eny extras
                 {
-                    splitlineStr[j] = splitlineStr[j].Trim();
+                    splitLineStr[j] = splitLineStr[j].Trim();
                 }
-                splitDataArr[i] = splitlineStr;//adds clean lines to arry 
+                splitDataArr[i] = splitLineStr;//adds clean lines to arry 
             }
 
             FilterNotValid(splitDataArr);
 
             foreach (string[] line in splitDataArr)
             {
-                if (line[0] =="") { continue; }
-
+                if (line==null || line[0] =="")
+                { 
+                    continue;
+                }
                 unitName[linecount] = line[0];
                 reportType[linecount] = line[1];
                 priority[linecount] = int.Parse(line[2]);
@@ -86,24 +92,26 @@ namespace Analiser
             // checks all if have valid fealds else clears all
             foreach (string[] line in splitDataArr)
             {
+                if ((line == null ) || line.Length != 5 ) 
+                {
+                    continue;
+                }
                 bool flag = false;
-                flag = Enum.TryParse(line[1], true, out ReportType report);
+                flag = Enum.TryParse(line[1], true, out ReportType report) ;
 
-                flag = int.TryParse(line[2], out int num);
-                if (num > 5 | num < 0) { flag = true; }
+                flag = int.TryParse(line[2], out int num) && (num < 6 && num > 0) && flag;
 
-                flag = double.TryParse(line[3], out double score);
-                if (score > 100 | score < 0) { flag = true; }
+                flag = double.TryParse(line[3], out double score)&& (score <= 100 && score >= 0) && flag;
 
-                flag = Enum.TryParse(line[4], true, out Status stat);
+                flag = Enum.TryParse(line[4], true, out Status stat) && flag;
 
-                if (flag) { line[0] = ""; line[1] = ""; line[2] = ""; line[3] = ""; line[4] = ""; } 
+                if (!flag) { line[0] = ""; line[1] = ""; line[2] = ""; line[3] = ""; line[4] = ""; } 
             }
         }
 
         static double CalculateAverage(double[] score,int numOfLines) 
         {
-            int count = 0;
+            double count = 0;
             if (numOfLines == 0) return 0;
             foreach (int num in score) { count = count + num; }
             return (double)count / numOfLines;
@@ -178,7 +186,7 @@ namespace Analiser
         static void DisplayHighestPriorityApproved(string[] unitName, string[] reportType,int[] priority,double[] score,string[] status, int count) 
         {
             int highestApprovedPriorityIndex = 0;
-        for (int i = 1; i < count; i++)
+            for (int i = 1; i < count; i++)
             {
                 if (status[i].ToLower() == Status.Approved.ToString().ToLower()) 
                 {
@@ -188,7 +196,7 @@ namespace Analiser
                     }
                 }
             }
-            Console.WriteLine($"=== Highest Priority Approved ===" +
+            Console.WriteLine($"=== Highest Priority Approved ===\n\n" +
                 $"unit Name: {unitName[highestApprovedPriorityIndex]}," +
                 $"report Type : {reportType[highestApprovedPriorityIndex]}," +
                 $"report Type : {reportType[highestApprovedPriorityIndex]}," +
@@ -213,19 +221,26 @@ namespace Analiser
         }
 
         static void Main()
-            {
+        {
+
             string filePath = "reports.txt";
-            string[] fileData = new string[100];
             int count;
 
-            string[] unitName = new string[fileData.Length];
-            string[] reportType = new string[fileData.Length];
-            int[] priority = new int[fileData.Length];
-            double[] score = new double[fileData.Length];
-            string[] status = new string[fileData.Length];
+            string[] fileData = new string[100];
+            string[] unitName = new string[100];
+            string[] reportType = new string[100];
+            int[] priority = new int[100];
+            double[] score = new double[100];
+            string[] status = new string[100];
 
             count =LoadFile(filePath, fileData, unitName, reportType, priority, score, status);
-
-            }   
-        }
+            if (count > 0)
+            {
+                DisplayStatusCounts(status, count);
+                DisplayTypeCounts(reportType, count);
+                DisplayHighestPriorityApproved(unitName, reportType, priority, score, status, count);
+                DisplayAverageByPriority(priority, score, count);
+            }
+        }   
     }
+}
