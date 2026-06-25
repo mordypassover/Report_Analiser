@@ -101,7 +101,7 @@ namespace Analiser
 
                 flag = int.TryParse(line[2], out int num) && (num < 6 && num > 0) && flag;
 
-                flag = double.TryParse(line[3], out double score)&& (score <= 100 && score >= 0) && flag;
+                flag = double.TryParse(line[3], out double score) && (score <= 100 && score >= 0) && flag;
 
                 flag = Enum.TryParse(line[4], true, out Status stat) && flag;
 
@@ -113,7 +113,7 @@ namespace Analiser
         {
             double count = 0;
             if (numOfLines == 0) return 0;
-            foreach (int num in score) { count = count + num; }
+            foreach (double num in score) { count = count + num; }
             return (double)count / numOfLines;
         }
 
@@ -132,7 +132,7 @@ namespace Analiser
             double min = 100.0;
             foreach (double num in score)
             {
-                if (min < num) min = num;
+                if (min > num) min = num;
             }
             return min;
         }
@@ -141,7 +141,7 @@ namespace Analiser
         static int CountByStatus(string[] status, Status statusEnom, int count)
         {
             int cnt = 0;
-            for (int i =0; i >count; i++) 
+            for (int i =0; i < count; i++) 
             {
                 if (status[i].ToLower() == statusEnom.ToString().ToLower()) cnt += 1;
             }
@@ -151,7 +151,7 @@ namespace Analiser
         static int CountByType(string[] reportType, ReportType type, int count)
         {
             int cnt = 0;
-            for (int i = 0; i > count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (reportType[i].ToLower() == type.ToString().ToLower()) cnt += 1;
             }
@@ -161,7 +161,7 @@ namespace Analiser
         {
             Console.WriteLine($"=== Basic Statistics ===\n" +
                 $"number of reports : {count}\n" +
-                $"average : {CalculateAverage(score, count)}\n" +
+                $"average : {CalculateAverage(score, count):F2}\n" +
                 $"max score : {FindMaxScore(score)}\n" +
                 $"min score : {FindMinScore(score, count)}");
 
@@ -197,12 +197,11 @@ namespace Analiser
                 }
             }
             Console.WriteLine($"=== Highest Priority Approved ===\n\n" +
-                $"unit Name: {unitName[highestApprovedPriorityIndex]}," +
-                $"report Type : {reportType[highestApprovedPriorityIndex]}," +
-                $"report Type : {reportType[highestApprovedPriorityIndex]}," +
-                $"priority : {priority[highestApprovedPriorityIndex]}," +
-                $"score : {score[highestApprovedPriorityIndex]}," +
-                $"status : {status[highestApprovedPriorityIndex]},");
+                $"unit Name: {unitName[highestApprovedPriorityIndex]}, \n" +
+                $"report Type : {reportType[highestApprovedPriorityIndex]}, \n" +
+                $"priority : {priority[highestApprovedPriorityIndex]}, \n" +
+                $"score : {score[highestApprovedPriorityIndex]}, \n" +
+                $"status : {status[highestApprovedPriorityIndex]}, \n");
         }
         static void DisplayAverageByPriority(int[] priority, double[] score, int count)
         {
@@ -210,13 +209,17 @@ namespace Analiser
             int[] prioritysCnts = new int[5];
             for (int i = 0; i < count; i++)
             {
-                prioritysSums[priority[i]] = prioritysSums[priority[i]] + score[i];
-                prioritysCnts[priority[i]]++;
+                prioritysSums[priority[i] - 1] = prioritysSums[priority[i] - 1] + score[i];
+                prioritysCnts[priority[i] - 1]++;
             }
-            foreach (int p in prioritysCnts)
+            for (int i = 0; i < prioritysCnts.Length; i++)
             {
-                if (prioritysCnts[p] == 0) { Console.WriteLine($"priorety {p + 1} : no reports"); }
-                else { Console.WriteLine($"priorety {p + 1} : {(double)prioritysSums[p] / prioritysCnts[p]}"); }
+                if (prioritysCnts[i] == 0) 
+                {
+                    Console.WriteLine($"priorety {i + 1} : no reports");
+                    continue;
+                }
+                Console.WriteLine($"priorety {i + 1} : {(double)prioritysSums[i] / prioritysCnts[i]}"); 
             }
         }
 
@@ -233,13 +236,17 @@ namespace Analiser
             double[] score = new double[100];
             string[] status = new string[100];
 
-            count =LoadFile(filePath, fileData, unitName, reportType, priority, score, status);
+            count = LoadFile(filePath, fileData, unitName, reportType, priority, score, status);
+            
             if (count > 0)
             {
+                DisplayBasicStatistics(score, count);
                 DisplayStatusCounts(status, count);
                 DisplayTypeCounts(reportType, count);
                 DisplayHighestPriorityApproved(unitName, reportType, priority, score, status, count);
                 DisplayAverageByPriority(priority, score, count);
+
+                
             }
         }   
     }
