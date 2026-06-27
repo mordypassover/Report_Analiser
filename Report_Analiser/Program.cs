@@ -21,7 +21,7 @@ namespace Analiser
         }
     class ReportAnaliser
     {
-        static int LoadFile(string path, string[] fileData, string[] unitName, string[] reportType, int[] priority, double[] score, string[] status)
+        static int LoadFile(string path, string[] fileData, string[] unitName, ReportType[] reportType, int[] priority, double[] score, Status[] status)
         {
              
             if (!File.Exists(path))
@@ -39,7 +39,7 @@ namespace Analiser
             Console.WriteLine($"File loaded: {fileDataRead.Length} lines found.");
             for(int i =0; i < fileDataRead.Length; i++)
             {
-                if (i >= 100) break;//if file bigger then 100 lines
+                if (i >= 100) break; //if file bigger then 100 lines 
 
                 fileData[i] = fileDataRead[i];
             }
@@ -51,7 +51,7 @@ namespace Analiser
             return count;
 
         }
-        static int ProcessReports(string[] stringDataArr, string[] unitName, string[] reportType, int[] priority, double[] score, string[] status)
+        static int ProcessReports(string[] stringDataArr, string[] unitName, ReportType[] reportType, int[] priority, double[] score, Status[] status)
         {   
             Array[] splitDataArr = new Array[100];
             int linecount = 0;
@@ -66,6 +66,12 @@ namespace Analiser
                 }
                 
                 splitLineStr = stringDataArr[i].Split(",");
+
+                if (splitLineStr.Length != 5) //makes line with les then 5 feiles drop at validation
+                {
+                    splitLineStr[0] ="";
+                    continue; 
+                }
                 for (int j = 0; j < 5; j++)//strips eny extras
                 {
                     splitLineStr[j] = splitLineStr[j].Trim();
@@ -81,11 +87,14 @@ namespace Analiser
                 { 
                     continue;
                 }
+                Enum.TryParse(line[1], true, out ReportType type);
+                Enum.TryParse(line[4], true, out Status stat);
+
                 unitName[linecount] = line[0];
-                reportType[linecount] = line[1];
+                reportType[linecount] = type;
                 priority[linecount] = int.Parse(line[2]);
                 score[linecount] = double.Parse(line[3]);
-                status[linecount] = line[4];
+                status[linecount] = stat;
                 linecount++;
                 Console.WriteLine("Valid record processed.");
             }
@@ -106,76 +115,82 @@ namespace Analiser
                 if (!Enum.TryParse(line[1], true, out ReportType report)) 
                 {
                     flag = false;
-                    Console.WriteLine("Report Type not valid");
+                    Console.Write("Report Type not valid ");
                 }
 
                 if (!int.TryParse(line[2], out int num) || !(num < 6 && num > 0) )
                 {
                     flag = false;
-                    Console.WriteLine("priority not valid");
+                    Console.Write("priority not valid ");
                 }
 
                 if (!double.TryParse(line[3], out double score) || !(score <= 100 && score >= 0))
                 {
                     flag = false;
-                    Console.WriteLine("score not valid");
+                    Console.Write("score not valid ");
                 }
 
                 if (!Enum.TryParse(line[4], true, out Status stat))
                 {
                     flag = false;
-                    Console.WriteLine("Status not valid");
+                    Console.Write("Status not valid");
                 }
 
-                if (!flag) { line[0] = ""; line[1] = ""; line[2] = ""; line[3] = ""; line[4] = ""; } 
+                if (!flag) { line[0] = ""; line[1] = ""; line[2] = ""; line[3] = ""; line[4] = ""; Console.WriteLine(); } 
             }
         }
 
         static double CalculateAverage(double[] score,int numOfLines) 
         {
-            double count = 0;
-            if (numOfLines == 0) return 0;
-            foreach (double num in score) { count = count + num; }
-            return (double)count / numOfLines;
+            double sum = 0;
+            if (numOfLines == 0)// protects from division by 0
+            { 
+                return 0;
+            }
+            for (int i = 0; i < numOfLines; i++)
+            {
+                sum += score[i];
+            }
+            return (double)sum / numOfLines;
         }
 
-        static double FindMaxScore(double[] score) 
+        static double FindMaxScore(double[] score, int count) 
         {
             double max = 0;
-            foreach (double num in score) 
+            for (int i = 0; i < count; i++)
             {
-                if (max < num) max = num;
+                if (max < score[i]) { max = score[i]; }
             }
             return max;
         }
 
         static double FindMinScore(double[] score,int count)
         {
-            double min = 100.0;
-            foreach (double num in score)
+            double min = score[0];
+            for (int i = 1; i < count; i++)
             {
-                if (min > num) min = num;
+                if (min > score[i]) { min = score[i]; }
             }
             return min;
         }
         
 
-        static int CountByStatus(string[] status, Status statusEnom, int count)
+        static int CountByStatus(Status[] status, Status statusEnom, int count)
         {
             int cnt = 0;
             for (int i =0; i < count; i++) 
             {
-                if (status[i].ToLower() == statusEnom.ToString().ToLower()) cnt += 1;
+                if (status[i] == statusEnom) cnt += 1;
             }
             return cnt;
         }
 
-        static int CountByType(string[] reportType, ReportType type, int count)
+        static int CountByType(ReportType[] reportType, ReportType type, int count)
         {
             int cnt = 0;
             for (int i = 0; i < count; i++)
             {
-                if (reportType[i].ToLower() == type.ToString().ToLower()) cnt += 1;
+                if (reportType[i] == type) cnt += 1;
             }
             return cnt;
         }
@@ -184,12 +199,12 @@ namespace Analiser
             Console.WriteLine($"=== Report Statistics ===\n" +
                 $"number of reports : {count}\n" +
                 $"average : {CalculateAverage(score, count):F2}\n" +
-                $"max score : {FindMaxScore(score)}\n" +
+                $"max score : {FindMaxScore(score, count)}\n" +
                 $"min score : {FindMinScore(score, count)}");
 
         }
 
-        static void DisplayStatusCounts(string[] status, int count)
+        static void DisplayStatusCounts(Status[] status, int count)
         {
             Console.WriteLine($"=== Reports by Status ===\n" +
                 $"Pending : {CountByStatus(status, Status.Pending,count)}\n" +
@@ -197,7 +212,7 @@ namespace Analiser
                 $"Rejected : {CountByStatus(status, Status.Rejected, count)}");
         }
 
-        static void DisplayTypeCounts(string[] reportType, int count) 
+        static void DisplayTypeCounts(ReportType[] reportType, int count) 
         {
             Console.WriteLine($"=== Reports by Type ===\n" +
                 $"Collect : {CountByType(reportType,ReportType.Collect, count)}\n" +
@@ -205,25 +220,29 @@ namespace Analiser
                 $"Recon : {CountByType(reportType, ReportType.Recon, count)}\n" +
                 $"Intel : {CountByType(reportType, ReportType.Intel, count)}");
         }
-        static void DisplayHighestPriorityApproved(string[] unitName, string[] reportType,int[] priority,double[] score,string[] status, int count) 
+        static void DisplayHighestPriorityApproved(string[] unitName, ReportType[] reportType,int[] priority,double[] score, Status[] status, int count) 
         {
-            int highestApprovedPriorityIndex = 0;
-            for (int i = 1; i < count; i++)
+            int? highestApprovedPriorityIndex = null ;
+            for (int i = 0; i < count; i++)
             {
-                if (status[i].ToLower() == Status.Approved.ToString().ToLower()) 
+                if (status[i] == Status.Approved) 
                 {
-                    if (priority[highestApprovedPriorityIndex] < priority[i]) 
+                    if (highestApprovedPriorityIndex == null || priority[highestApprovedPriorityIndex.Value] < priority[i]) 
                     {
                         highestApprovedPriorityIndex = i; 
                     }
                 }
             }
-            Console.WriteLine($"=== Highest Priority Approved ===\n\n" +
-                $"unit Name: {unitName[highestApprovedPriorityIndex]}, \n" +
-                $"report Type : {reportType[highestApprovedPriorityIndex]}, \n" +
-                $"priority : {priority[highestApprovedPriorityIndex]}, \n" +
-                $"score : {score[highestApprovedPriorityIndex]}, \n" +
-                $"status : {status[highestApprovedPriorityIndex]}, \n");
+            if (highestApprovedPriorityIndex != null)
+            {
+                Console.WriteLine($"=== Highest Priority Approved ===\n\n" +
+                    $"unit Name: {unitName[highestApprovedPriorityIndex.Value]}, \n" +
+                    $"report Type : {reportType[highestApprovedPriorityIndex.Value]}, \n" +
+                    $"priority : {priority[highestApprovedPriorityIndex.Value]}, \n" +
+                    $"score : {score[highestApprovedPriorityIndex.Value]}, \n" +
+                    $"status : {status[highestApprovedPriorityIndex.Value]}, \n");
+            }
+            else { Console.WriteLine("no status aproved found"); }
         }
         static void DisplayAverageByPriority(int[] priority, double[] score, int count)
         {
@@ -253,10 +272,10 @@ namespace Analiser
 
             string[] fileData = new string[100];
             string[] unitName = new string[100];
-            string[] reportType = new string[100];
+            ReportType[] reportType = new ReportType[100];
             int[] priority = new int[100];
             double[] score = new double[100];
-            string[] status = new string[100];
+            Status[] status = new Status[100];
 
             count = LoadFile(filePath, fileData, unitName, reportType, priority, score, status);
             
@@ -267,9 +286,10 @@ namespace Analiser
                 DisplayTypeCounts(reportType, count);
                 DisplayHighestPriorityApproved(unitName, reportType, priority, score, status, count);
                 DisplayAverageByPriority(priority, score, count);
-
-                
             }
         }   
+
+
+
     }
 }

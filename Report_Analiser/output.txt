@@ -1,0 +1,59 @@
+File loaded: 27 lines found.
+Report Type not valid
+priority not valid
+score not valid
+score not valid
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Valid record processed.
+Stored 23 valid records for analysis.
+Processing complete.
+Valid records: 23
+Invalid records: 4
+=== Report Statistics ===
+number of reports : 23
+average : 71.97
+max score : 100
+min score : 0
+=== Reports by Status ===
+Pending : 4
+Approved : 15
+Rejected : 4
+=== Reports by Type ===
+Collect : 7
+Analyze : 5
+Recon : 6
+Intel : 5
+=== Highest Priority Approved ===
+
+unit Name: Bravo,
+report Type : Analyze,
+priority : 5,
+score : 92,
+status : Approved,
+
+priorety 1 : 34.975
+priorety 2 : 62.1
+priorety 3 : 79.52857142857144
+priorety 4 : 84.55
+priorety 5 : 93.05
